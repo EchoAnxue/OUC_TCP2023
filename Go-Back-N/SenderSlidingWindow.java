@@ -7,47 +7,53 @@ import java.util.Timer;
 
 public class SenderSlidingWindow extends Window {
 
-    private Timer timer;  // ¼ÆÊ±Æ÷
-    private RetransmitTask task;  // ÖØ´«ÈÎÎñ
+    private Timer timer;  // è®¡æ—¶å™¨
+    private RetransmitTask task;  // é‡ä¼ ä»»åŠ¡
 
     public SenderSlidingWindow(Client client) {
         super(client);
     }
 
-    // ¼ÓÈë°üµ½´°¿Ú
+    // åŠ å…¥åŒ…åˆ°çª—å£
     public void putPacket(TCP_PACKET packet) {
-        packets[nextIndex] = packet;  // ÔÚ´°¿ÚµÄÏÂÒ»¸ö²åÈëÎ»ÖÃ£¬·ÅÈë°ü
-        if (nextIndex == 0) {  // Èç¹ûnextIndex==0£¬¼´ÔÚ´°¿Ú×óÑØ£¬Ôò¿ªÆô¼ÆÊ±Æ÷
+        packets[nextIndex] = packet;  // åœ¨çª—å£çš„ä¸‹ä¸€ä¸ªæ’å…¥ä½ç½®ï¼Œæ”¾å…¥åŒ…
+        if (nextIndex == 0) {  // å¦‚æœnextIndex==0ï¼Œå³åœ¨çª—å£å·¦æ²¿ï¼Œåˆ™å¼€å¯è®¡æ—¶å™¨
             timer = new Timer();
             task = new RetransmitTask(client, packets);
             timer.schedule(task, 1000, 1000);
         }
-        nextIndex++;  // ¸üĞÂ´°¿ÚµÄÏÂÒ»¸ö²åÈëÎ»ÖÃ
+        nextIndex++;  // æ›´æ–°çª—å£çš„ä¸‹ä¸€ä¸ªæ’å…¥ä½ç½®
     }
 
-    // ½ÓÊÕµ½ACK
+    // æ¥æ”¶åˆ°ACK
     public void receiveACK(int currentSequence) {
         if (base <= currentSequence && currentSequence < base + size)
-        {  // Èç¹û¸ÃACKÔÚ´°¿Ú·¶Î§ÄÚ
+        {  // å¦‚æœè¯¥ACKåœ¨çª—å£èŒƒå›´å†…
 
             for (int i = 0; currentSequence - base + 1 + i < size; i++)
-            {  // ÏòÓÒÒÆ¶¯»¬¶¯´°¿Ú£¬Ïàµ±ÓÚ½«ÏàÓ¦Êı¾İ×óÒÆ
+            {  // å‘å³ç§»åŠ¨æ»‘åŠ¨çª—å£ï¼Œç›¸å½“äºå°†ç›¸åº”æ•°æ®å·¦ç§»
                 packets[i] = packets[currentSequence - base + 1 + i];
                 packets[currentSequence - base + 1 + i] = null;
             }
 
-            nextIndex -= currentSequence - base + 1;  // ¸üĞÂnextIndex
-            base = currentSequence + 1;  // ¸üĞÂbase
+            nextIndex -= currentSequence - base + 1;  // æ›´æ–°nextIndex
+            base = currentSequence + 1;  // æ›´æ–°base
 
-            timer.cancel();  // Í£Ö¹¼ÆÊ±Æ÷
+            timer.cancel();  // åœæ­¢è®¡æ—¶å™¨
 
-            if (nextIndex != 0) {  // ´°¿ÚÖĞÈÔÓĞ°ü£¬ĞèÒªÖØ¿ª¼ÆÊ±Æ÷
+            if (nextIndex != 0) {  // çª—å£ä¸­ä»æœ‰åŒ…ï¼Œéœ€è¦é‡å¼€è®¡æ—¶å™¨
                 timer = new Timer();
                 task = new RetransmitTask(client, packets);
                 timer.schedule(task, 1000, 1000);
             }
         }
+        else {
+	            timer = new Timer();
+	            task = new RetransmitTask(client, packets);
+	            timer.schedule(task, 1000, 1000);
+        }
     }
+
 
 
 }
