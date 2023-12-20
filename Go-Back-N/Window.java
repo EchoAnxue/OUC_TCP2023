@@ -4,17 +4,17 @@ import com.ouc.tcp.client.Client;
 import com.ouc.tcp.message.TCP_PACKET;
 
 public class Window {
-    public Client client;  //¿Í»§¶Ë
-    public int size = 32; //´°¿Ú´óĞ¡
-    public TCP_PACKET[] packets = new TCP_PACKET[size];  // ´æ´¢´°¿ÚÄÚµÄ°ü
-    public int base = 0;  // ´°¿Ú×óÖ¸Õë
-    public int nextIndex = 0;  // ÏÂÒ»¸ö°üµÄÖ¸Õë
+    public Client client;  //å®¢æˆ·ç«¯
+    public int size = 8; //çª—å£å¤§å°
+    public TCP_PACKET[] packets = new TCP_PACKET[size];  // å­˜å‚¨çª—å£å†…çš„åŒ…
+    public int base = 0;  // çª—å£å·¦æŒ‡é’ˆ
+    public int nextIndex = 0;  // ä¸‹ä¸€ä¸ªåŒ…çš„æŒ‡é’ˆ
 
     public Window(Client client) {
         this.client = client;
     }
 
-    /*ÅĞ¶Ï´°¿ÚÊÇ·ñÒÑÂú*/
+    /*åˆ¤æ–­çª—å£æ˜¯å¦å·²æ»¡*/
     public boolean isFull() {
         return size <= nextIndex;
     }
