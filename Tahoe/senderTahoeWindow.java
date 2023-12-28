@@ -8,19 +8,19 @@ import com.ouc.tcp.client.UDT_Timer;
 import com.ouc.tcp.message.TCP_PACKET;
 
 public class senderTahoeWindow {
-    public Client client;  //¿Í»§¶Ë
+    public Client client;  //å®¢æˆ·ç«¯
     private volatile int ssthresh = 16;
     public int cwnd = 1;
-    private int lastAck = -1; //ÉÏÒ»´ÎÊÕµ½µÄACKµÄ°üµÄseq
-    // Ê¹ÓÃ¹şÏ£±í£¬´æ´¢´°¿ÚÄÚµÄ°ü
+    private int lastAck = -1; //ä¸Šä¸€æ¬¡æ”¶åˆ°çš„ACKçš„åŒ…çš„seq
+    // ä½¿ç”¨å“ˆå¸Œè¡¨ï¼Œå­˜å‚¨çª—å£å†…çš„åŒ…
     private Hashtable<Integer, TCP_PACKET> packets = new Hashtable<Integer, TCP_PACKET>();
-    // Ê¹ÓÃ¹şÏ£±í£¬´¢´æÃ¿¸ö°üµÄ¼ÆÊ±Æ÷
+    // ä½¿ç”¨å“ˆå¸Œè¡¨ï¼Œå‚¨å­˜æ¯ä¸ªåŒ…çš„è®¡æ—¶å™¨
     private Hashtable<Integer, UDT_Timer> timers = new Hashtable<Integer, UDT_Timer>();
-    private int ackCount = -1; //ÖØ¸´µÄAckÊı
-    private int congestionCount = 0; // ½øÈëÓµÈû±ÜÃâ×´Ì¬Ê±ÊÕµ½µÄACKÊı¼ÇÂ¼
+    private int ackCount = -1; //é‡å¤çš„Ackæ•°
+    private int congestionCount = 0; // è¿›å…¥æ‹¥å¡é¿å…çŠ¶æ€æ—¶æ”¶åˆ°çš„ACKæ•°è®°å½•
 
     
-    // ¼ÓÈë°üµ½´°¿Ú
+    // åŠ å…¥åŒ…åˆ°çª—å£
     public void addPacket(TCP_PACKET packet) {
         int number = (packet.getTcpH().getTh_seq() - 1) / 100;
         timers.put(number, new UDT_Timer());
@@ -31,18 +31,18 @@ public class senderTahoeWindow {
         this.client = client;
     }
 
-    /*ÅĞ¶Ï´°¿ÚÊÇ·ñÒÑÂú*/
+    /*åˆ¤æ–­çª—å£æ˜¯å¦å·²æ»¡*/
     public boolean isFull() {
         return cwnd <= packets.size();
     }
 
     
     
-    // ½ÓÊÕµ½ACK
+    // æ¥æ”¶åˆ°ACK
     public void receiveACK(int number) {
-        if (number != lastAck) { //ÊÇĞÂµÄĞòºÅ
+        if (number != lastAck) { //æ˜¯æ–°çš„åºå·
             for (int i = lastAck + 1; i <= number; i++) {
-                //ÀÛ¼ÆÈ·ÈÏ£¬¿ÉÒÔ½«Ö®Ç°µÄ°üÒÆ³ö´°¿ÚÁË
+                //ç´¯è®¡ç¡®è®¤ï¼Œå¯ä»¥å°†ä¹‹å‰çš„åŒ…ç§»å‡ºçª—å£äº†
                 packets.remove(i);
                 if (timers.containsKey(i)) {
                     timers.get(i).cancel();
@@ -50,38 +50,38 @@ public class senderTahoeWindow {
                 }
             }
             lastAck = number;
-            ackCount = 0;  //µÚÒ»´ÎÊÕµ½Õâ¸ö°ü
+            ackCount = 0;  //ç¬¬ä¸€æ¬¡æ”¶åˆ°è¿™ä¸ªåŒ…
 
-            if (cwnd < ssthresh) { //ÂıÆô¶¯
-                // Ã¿ÊÕµ½Ò»¸öACK£¬cwnd+1£¬¼´Ã¿¾­¹ıRTT·­±¶£¬Ö¸Êı¼¶Ôö³¤
+            if (cwnd < ssthresh) { //æ…¢å¯åŠ¨
+                // æ¯æ”¶åˆ°ä¸€ä¸ªACKï¼Œcwnd+1ï¼Œå³æ¯ç»è¿‡RTTç¿»å€ï¼ŒæŒ‡æ•°çº§å¢é•¿
                 System.out.println("********* SLOW START *********");
                 System.out.println("cwnd: " + cwnd + " ---> " + (cwnd + 1));
                 cwnd ++;
-            }else { //ÓµÈû±ÜÃâ
+            }else { //æ‹¥å¡é¿å…
                 congestionCount ++;
                 System.out.println("********* CONGESTION AVOIDANCE *********");
                 System.out.println("cwnd: " + cwnd + "  congestionCount: " + congestionCount);
-                if (congestionCount >= cwnd) {  // ÊÕµ½ACKÊıÁ¿³¬¹ı cwnd£¬ÏßĞÔÔö³¤
-                    congestionCount -= cwnd;  // ÖØÖÃ¼ÆÊıÆ÷
+                if (congestionCount >= cwnd) {  // æ”¶åˆ°ACKæ•°é‡è¶…è¿‡ cwndï¼Œçº¿æ€§å¢é•¿
+                    congestionCount -= cwnd;  // é‡ç½®è®¡æ•°å™¨
                     System.out.println("cwnd: " + cwnd + " ---> " + (cwnd + 1));
                     cwnd ++;
                 }
             }
-        }else{ //¾ÉĞòºÅ
+        }else{ //æ—§åºå·
             ackCount++;
-            if(ackCount>=3){ //ÓĞÈı´ÎÖØ¸´µÄack£¬Óëfast recoveryµÄÇø±ğ£¬cwndÖ»ÊÇÕÛ°ë£¬²»»á+3.
+            if(ackCount>=3){ //æœ‰ä¸‰æ¬¡é‡å¤çš„ackï¼Œä¸fast recoveryçš„åŒºåˆ«ï¼Œcwndåªæ˜¯æŠ˜åŠï¼Œä¸ä¼š+3.
                 TCP_PACKET packet = packets.get(number + 1);
                 if (packet != null) {
-                    System.out.println("*********  ,num = "+number+" ********* ");
+                    System.out.println("*********retransmit  ,num = "+number+" ********* ");
                     client.send(packet);
                     timers.get(number + 1).cancel();
                     timers.put(number + 1, new UDT_Timer());
                     timers.get(number + 1).schedule(new Taho_Timer(client, packet), 1000, 1000);
                 }
                 System.out.println("cwnd: " + cwnd + " ---> " + 1);
-                //ssthresh  ÕÛ°ë
+                //ssthresh  æŠ˜åŠ
                 System.out.println("ssthresh: " + ssthresh + " ---> " + Math.max(cwnd / 2, 2));
-                ssthresh = Math.max(cwnd / 2, 2); // ssthresh ²»µÃĞ¡ÓÚ2
+                ssthresh = Math.max(cwnd / 2, 2); // ssthresh ä¸å¾—å°äº2
                 cwnd = 1;
             }
         }
@@ -108,7 +108,7 @@ public class senderTahoeWindow {
             System.out.println("cwnd: " + cwnd + " ---> " + 1);
             System.out.println("ssthresh: " + ssthresh + " ---> " + Math.max(cwnd / 2, 2));
 
-            ssthresh = Math.max(cwnd / 2, 2); // ssthresh ²»µÃĞ¡ÓÚ2
+            ssthresh = Math.max(cwnd / 2, 2); // ssthresh ä¸å¾—å°äº2
             cwnd = 1;
             super.run();
 
